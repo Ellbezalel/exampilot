@@ -71,7 +71,7 @@ const wordGames = [
 ];
 
 function App() {
-  const [view, setView] = useState("home");
+  const [view, setView] = useState("download");
   const [subject, setSubject] = useState("English");
   const [mode, setMode] = useState("practice");
   const [currentQ, setCurrentQ] = useState(0);
@@ -101,28 +101,49 @@ function App() {
   const [puzzleInput, setPuzzleInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
-  // --- REAL INSTALL / PWA - FIXED WITH 3 SECOND DELAY ---
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showInstall, setShowInstall] = useState(false);
+  const [showContinue, setShowContinue] = useState(false);
+  const [countdown, setCountdown] = useState(10);
+
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
       setInstallPrompt(e);
-      setTimeout(() => {
-        setShowInstall(true);
-      }, 3000);
+      setTimeout(() => { setShowInstall(true); }, 3000);
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
+
+  useEffect(() => {
+    if (view === "download") {
+      setShowContinue(false);
+      setCountdown(10);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setShowContinue(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [view]);
+
   const handleInstall = async () => {
     if (installPrompt) {
       installPrompt.prompt();
-      await installPrompt.userChoice;
-      setInstallPrompt(null);
-      setShowInstall(false);
+      const choice = await installPrompt.userChoice;
+      if (choice.outcome === "accepted") {
+        setInstallPrompt(null);
+        setShowInstall(false);
+      }
     } else {
-      setShowInstall(false);
+      alert("To install: Click ⋮ menu in Chrome → Add to Home Screen / Install App");
     }
   };
 
@@ -162,7 +183,13 @@ function App() {
     if (testMode === "aitest") { qs = qs.sort(() => 0.5 - Math.random()).slice(0, 10); }
     setQuizQuestions(qs); setCurrentQ(0); setScore(0); setSelected(null); setShowResult(false); setView("quiz");
   };
-  const answerQuestion = (idx) => { if (selected !== null) return; setSelected(idx); if (idx === quizQuestions[currentQ].answer) { setScore(score + 1); } };
+
+  const answerQuestion = (idx) => {
+    if (selected !== null) return;
+    setSelected(idx);
+    if (idx === quizQuestions[currentQ].answer) { setScore(score + 1); }
+  };
+
   const nextQuestion = () => {
     if (currentQ + 1 >= quizQuestions.length) {
       setShowResult(true);
@@ -170,50 +197,76 @@ function App() {
       if (playerName || mode === "aitest") {
         const entry = { name: playerName || "Anonymous Student", subject, score: finalScore, total: quizQuestions.length, mode, date: new Date().toLocaleDateString() };
         const updated = [entry, ...leaderboard].slice(0, 20);
-        setLeaderboard(updated); localStorage.setItem("exampilot_leaderboard", JSON.stringify(updated));
+        setLeaderboard(updated);
+        localStorage.setItem("exampilot_leaderboard", JSON.stringify(updated));
       }
       return;
     }
     setCurrentQ(currentQ + 1); setSelected(null);
   };
+
   const registerSchool = () => {
     if (!schoolName || !schoolEmail) { alert("Please enter the school name and email address."); return; }
     const newSchool = { name: schoolName, email: schoolEmail, students: schoolStudents, date: new Date().toLocaleDateString() };
-    const updated = [newSchool, ...schools]; setSchools(updated); localStorage.setItem("exampilot_schools", JSON.stringify(updated));
+    const updated = [newSchool, ...schools];
+    setSchools(updated);
+    localStorage.setItem("exampilot_schools", JSON.stringify(updated));
     alert("Thank you. Your school has been registered. We will contact you at " + schoolEmail);
     setSchoolName(""); setSchoolEmail(""); setSchoolStudents("");
   };
+
   const addComment = () => {
     if (!commentName || !commentEmail || !commentText) { alert("Please enter your name, email address and comment."); return; }
     const newComment = { id: Date.now(), name: commentName, email: commentEmail, text: commentText, likes: 0, liked: false, replies: [] };
-    const updated = [newComment, ...comments]; setComments(updated); localStorage.setItem("exampilot_comments", JSON.stringify(updated));
+    const updated = [newComment, ...comments];
+    setComments(updated);
+    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
     setCommentName(""); setCommentEmail(""); setCommentText("");
   };
+
   const likeComment = (id) => {
-    const updated = comments.map((c) => { if (c.id === id) return { ...c, liked: !c.liked, likes: c.liked ? c.likes - 1 : c.likes + 1 }; return c; });
-    setComments(updated); localStorage.setItem("exampilot_comments", JSON.stringify(updated));
+    const updated = comments.map((c) => {
+      if (c.id === id) return { ...c, liked: !c.liked, likes: c.liked ? c.likes - 1 : c.likes + 1 };
+      return c;
+    });
+    setComments(updated);
+    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
   };
+
   const addReply = (commentId) => {
     if (!replyName || !replyText) { alert("Please enter your name and reply."); return; }
-    const updated = comments.map((c) => { if (c.id === commentId) { return { ...c, replies: [...c.replies, { id: Date.now(), name: replyName, text: replyText, likes: 0, liked: false }] }; } return c; });
-    setComments(updated); localStorage.setItem("exampilot_comments", JSON.stringify(updated));
+    const updated = comments.map((c) => {
+      if (c.id === commentId) {
+        return { ...c, replies: [...c.replies, { id: Date.now(), name: replyName, text: replyText, likes: 0, liked: false }] };
+      }
+      return c;
+    });
+    setComments(updated);
+    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
     setReplyName(""); setReplyText(""); setReplyingTo(null);
   };
+
   const likeReply = (commentId, replyId) => {
     const updated = comments.map((c) => {
       if (c.id === commentId) {
-        const newReplies = c.replies.map((r) => { if (r.id === replyId) return { ...r, liked: !r.liked, likes: r.liked ? (r.likes || 0) - 1 : (r.likes || 0) + 1 }; return r; });
+        const newReplies = c.replies.map((r) => {
+          if (r.id === replyId) return { ...r, liked: !r.liked, likes: r.liked ? (r.likes || 0) - 1 : (r.likes || 0) + 1 };
+          return r;
+        });
         return { ...c, replies: newReplies };
       }
       return c;
     });
-    setComments(updated); localStorage.setItem("exampilot_comments", JSON.stringify(updated));
+    setComments(updated);
+    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
   };
+
   const startGame = () => { setGameTime(60); setGameScore(0); setGameActive(true); setGameMessage(""); setGameInput(""); };
   const checkGame = () => {
     const correct = wordGames[gameIndex].word;
-    if (gameInput.toUpperCase().trim() === correct) { setGameScore(gameScore + 10); setGameMessage("Correct. You earned 10 points."); setGameIndex((gameIndex + 1) % wordGames.length); setGameInput(""); }
-    else { setGameMessage("Please try again. Hint: " + wordGames[gameIndex].hint); }
+    if (gameInput.toUpperCase().trim() === correct) {
+      setGameScore(gameScore + 10); setGameMessage("Correct. You earned 10 points."); setGameIndex((gameIndex + 1) % wordGames.length); setGameInput("");
+    } else { setGameMessage("Please try again. Hint: " + wordGames[gameIndex].hint); }
   };
 
   const BottomMenu = () => (
@@ -226,7 +279,6 @@ function App() {
     </div>
   );
 
-  // REAL INSTALL POPUP - White popup, readable, professional text
   const InstallPopup = () => {
     if (!showInstall) return null;
     return (
@@ -240,6 +292,116 @@ function App() {
       </div>
     );
   };
+
+  // ===== NEW DESIGN - DOWNLOAD / INSTALLATION PAGE - FIRST =====
+  if (view === "download") {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0B2C4A", padding: "0", fontFamily: "Arial" }}>
+        <div style={{ textAlign: "center", padding: "30px 20px 20px", color: "white" }}>
+          <div style={{ width: "80px", height: "80px", background: "#FFC107", borderRadius: "50%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "45px", boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}>🎓</div>
+          <h1 style={{ fontSize: "30px", margin: "15px 0 5px", lineHeight: "1.2" }}>Download ExamPilot</h1>
+          <p style={{ color: "#FFC107", fontWeight: "bold", fontSize: "16px", margin: "0" }}>Free JAMB CBT App</p>
+          <p style={{ color: "#E0E0E0", fontSize: "14px", lineHeight: "1.6", marginTop: "10px" }}>
+            Practice JAMB, WAEC and School Exams.<br />Play Games. Pass with Confidence.
+          </p>
+        </div>
+        <div style={{ background: "white", borderTopLeftRadius: "30px", borderTopRightRadius: "30px", padding: "25px 20px 40px", textAlign: "center" }}>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+            <div style={{ flex: 1, background: "#FFF8DC", borderRadius: "12px", padding: "12px 5px" }}><div style={{ fontSize: "22px" }}>✅</div><b style={{ fontSize: "12px" }}>Free Forever</b></div>
+            <div style={{ flex: 1, background: "#FFF8DC", borderRadius: "12px", padding: "12px 5px" }}><div style={{ fontSize: "22px" }}>📴</div><b style={{ fontSize: "12px" }}>Works Offline</b></div>
+            <div style={{ flex: 1, background: "#FFF8DC", borderRadius: "12px", padding: "12px 5px" }}><div style={{ fontSize: "22px" }}>📚</div><b style={{ fontSize: "12px" }}>100+ Questions</b></div>
+          </div>
+          <button onClick={handleInstall} style={{ background: "#FFC107", color: "#0B2C4A", border: "none", padding: "18px", borderRadius: "15px", fontWeight: "bold", fontSize: "19px", width: "100%", cursor: "pointer", boxShadow: "0 6px 15px rgba(255,193,7,0.4)" }}>
+            📲 Install App Now
+          </button>
+          <p style={{ fontSize: "12px", color: "#888", marginTop: "8px" }}>
+            {installPrompt ? "Chrome go verify and install am now" : "Tap ⋮ in Chrome → Add to Home Screen"}
+          </p>
+          <p style={{ fontSize: "13px", marginTop: "15px" }}>⭐⭐⭐⭐⭐ <b>4.9</b> • Loved by students in Gombe & Nigeria</p>
+          {showContinue ? (
+            <p style={{ marginTop: "25px" }}>
+              <span onClick={() => setView("home")} style={{ color: "#0B2C4A", fontWeight: "bold", fontSize: "15px", cursor: "pointer", textDecoration: "underline" }}>
+                Continue on Website →
+              </span>
+              <br /><span style={{ fontSize: "12px", color: "#888" }}>For people wey no want install yet</span>
+            </p>
+          ) : (
+            <div style={{ marginTop: "25px", background: "#F5F5F5", borderRadius: "10px", padding: "10px" }}>
+              <p style={{ fontSize: "13px", color: "#888", margin: "0" }}>⏳ Please wait {countdown} seconds...</p>
+              <div style={{ height: "6px", background: "#E0E0E0", borderRadius: "10px", marginTop: "8px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${(10 - countdown) * 10}%`, background: "#FFC107", transition: "width 1s" }}></div>
+              </div>
+            </div>
+          )}
+          <footer style={{ marginTop: "30px", fontSize: "12px", color: "#888" }}>
+            <p>Built by Eleazar Alhaji Maaji | ellbezalel9@gmail.com</p>
+            <p>
+              <span onClick={() => setView("privacy")} style={{ cursor: "pointer", textDecoration: "underline", margin: "0 6px" }}>Privacy Policy</span> |
+              <span onClick={() => setView("terms")} style={{ cursor: "pointer", textDecoration: "underline", margin: "0 6px" }}>Terms and Services</span> |
+              <span onClick={() => setView("contact")} style={{ cursor: "pointer", textDecoration: "underline", margin: "0 6px" }}>Contact</span>
+            </p>
+          </footer>
+          <InstallPopup />
+        </div>
+      </div>
+    );
+  }
+
+  // ===== PRIVACY POLICY - FOR ADSENSE =====
+  if (view === "privacy") {
+    return (
+      <div className="App"><div className="top-banner"></div><div className="App-content">
+        <h1>Privacy Policy</h1>
+        <p><b>Last Updated:</b> November 2026</p>
+        <p>ExamPilot is built by Eleazar Alhaji Maaji. We respect your privacy.</p>
+        <h3>1. What We Collect</h3>
+        <p>When you comment or register your school, we collect your name and email you provide. We do not collect your password, bank details, or phone contacts.</p>
+        <h3>2. Cookies & Google Ads</h3>
+        <p>We use Google AdSense to show ads. Google may use cookies to show ads based on your interests. You can turn off personalized ads in your Google Ads Settings.</p>
+        <h3>3. How We Use Your Data</h3>
+        <p>We use your data only to show your comments, leaderboard score, and to contact schools that register. We do not sell your data to anyone.</p>
+        <h3>4. Children</h3>
+        <p>ExamPilot is for students. If you are under 18, please use the app with your parent or teacher permission.</p>
+        <h3>5. Contact Us</h3>
+        <p>Email: ellbezalel9@gmail.com | WhatsApp: +234 913 635 5760 | Gombe, Nigeria</p>
+        <button onClick={() => setView("home")} style={yellowBtnSmall}>Go Home</button>
+        <button onClick={() => setView("terms")} style={darkBlueBtn}>Terms and Services</button>
+        <BottomMenu />
+      </div></div>
+    );
+  }
+
+  // ===== TERMS AND SERVICES - FOR ADSENSE =====
+  if (view === "terms") {
+    return (
+      <div className="App"><div className="top-banner"></div><div className="App-content">
+        <h1>Terms and Services</h1>
+        <p><b>Last Updated:</b> November 2026</p>
+        <p>Welcome to ExamPilot. By using this app or website, you agree to these Terms and Services. If you no agree, please no use the app.</p>
+        <h3>1. What ExamPilot Is</h3>
+        <p>ExamPilot is a free study app built by Eleazar Alhaji Maaji to help students practice for JAMB, WAEC and school examinations. We are NOT JAMB, WAEC, or any government exam body.</p>
+        <h3>2. Free Use</h3>
+        <p>You can use ExamPilot for free for personal study, school practice, and teaching. You no need to pay to practice.</p>
+        <h3>3. Our Questions</h3>
+        <p>All questions inside ExamPilot are for practice only. Dem are NOT real JAMB or WAEC questions. Dem no guarantee say you go pass your exam, but dem go help you prepare better.</p>
+        <h3>4. Your Account / Name / Comments</h3>
+        <p>When you enter your name, email, or school details, make sure na true information. No post insult, hate, fake news, or another person phone number for comments. We fit delete any bad comment without telling you.</p>
+        <h3>5. What You No Fit Do</h3>
+        <p>You no fit copy our whole app and claim say na your own. You no fit use ExamPilot to scam students or collect money from dem by pretending to be us.</p>
+        <h3>6. Ads - Google AdSense</h3>
+        <p>We show ads from Google AdSense to keep ExamPilot free. We no control the ads wey Google show. If you click an ad, na between you and the advertiser.</p>
+        <h3>7. Changes To The App</h3>
+        <p>We fit add new questions, change features, or update these terms anytime. If we change am, we go update the date for top.</p>
+        <h3>8. No Guarantee</h3>
+        <p>We try our best to make sure questions are correct, but we no guarantee say every question is 100% correct. Always confirm with your teacher or textbook.</p>
+        <h3>9. Contact Us</h3>
+        <p><b>Founder:</b> Eleazar Alhaji Maaji<br /><b>Email:</b> ellbezalel9@gmail.com<br /><b>WhatsApp:</b> +234 913 635 5760<br /><b>Location:</b> Gombe, Gombe State, Nigeria</p>
+        <button onClick={() => setView("home")} style={yellowBtnSmall}>Go Home</button>
+        <button onClick={() => setView("privacy")} style={darkBlueBtn}>Privacy Policy</button>
+        <BottomMenu />
+      </div></div>
+    );
+  }
 
   if (view === "quiz") {
     if (showResult) {
@@ -285,39 +447,44 @@ function App() {
     return (<div className="App"><div className="top-banner"></div><div className="App-content"><h1>Choose a Subject</h1><input placeholder="Your Name for the Leaderboard (optional)" value={playerName} onChange={(e) => setPlayerName(e.target.value)} className="input-box" />{Object.keys(subjectsData).map((subj) => (<div key={subj} className="subject-card"><h2>{subj}</h2><p>{subjectsData[subj].length} Questions Available</p><button onClick={() => startPractice(subj, "practice")} style={yellowBtnSmall}>Practice</button><button onClick={() => startPractice(subj, "aitest")} style={darkBlueBtn}>AI Test</button></div>))}<BottomMenu /></div></div>);
   }
 
-  // HOME - FIXED
+  // HOME
   return (
-    <div className="App"><div className="top-banner"></div><div className="App-content">
-      <div className="hero">
-        <h1>ExamPilot</h1>
-        <p style={{ color: "#FFFFFF", fontSize: "16px", lineHeight: "1.6" }}>Practice JAMB, WAEC and School Examinations. Play Games. Pass with Confidence.</p>
-        <button onClick={() => setView("subjects")} style={yellowBtnSmall}>Start Practicing Now</button>
-        {showInstall && <p style={{ fontSize: "13px", color: "#FFC107", marginTop: "10px", fontWeight: "bold" }}>✅ Your phone is ready to install ExamPilot!</p>}
+    <div className="App">
+      <div className="top-banner"></div>
+      <div className="App-content">
+        <div className="hero">
+          <h1>ExamPilot</h1>
+          <p style={{ color: "#FFFFFF", fontSize: "16px", lineHeight: "1.6" }}>Practice JAMB, WAEC and School Examinations. Play Games. Pass with Confidence.</p>
+          <button onClick={() => setView("subjects")} style={yellowBtnSmall}>Start Practicing Now</button>
+          {showInstall && <p style={{ fontSize: "13px", color: "#FFC107", marginTop: "10px", fontWeight: "bold" }}>✅ Your phone is ready to install ExamPilot!</p>}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", margin: "14px 0" }}>
+          <button onClick={() => setView("subjects")} style={yellowBtn}>📚<br />Subjects</button>
+          <button onClick={() => setView("games")} style={yellowBtn}>🎮<br />Games</button>
+          <button onClick={() => setView("leaderboard")} style={yellowBtn}>🏆<br />Leaderboard</button>
+          <button onClick={() => setView("schools")} style={yellowBtn}>🏫<br />For Schools</button>
+          <button onClick={() => setView("comments")} style={yellowBtn}>💬<br />Comments</button>
+          <button onClick={() => setView("about")} style={yellowBtn}>ℹ️<br />About</button>
+          <button onClick={() => setView("contact")} style={{ ...yellowBtn, gridColumn: "span 2" }}>📞<br />Contact</button>
+        </div>
+        <div className="info-box">
+          <h3>Why ExamPilot?</h3>
+          <p>Free practice, AI Test, Leaderboard, Games and School Registration. Built for students in Gombe and across Nigeria.</p>
+        </div>
+        <footer>
+          <p>Built by Eleazar Alhaji Maaji | ellbezalel9@gmail.com | +234 913 635 5760</p>
+          <p>Gombe State University - Computer Science Education</p>
+          <p style={{ marginTop: "10px" }}>
+            <span onClick={() => setView("privacy")} style={{ cursor: "pointer", textDecoration: "underline", margin: "0 8px" }}>Privacy Policy</span> |
+            <span onClick={() => setView("terms")} style={{ cursor: "pointer", textDecoration: "underline", margin: "0 8px" }}>Terms and Services</span> |
+            <span onClick={() => setView("about")} style={{ cursor: "pointer", textDecoration: "underline", margin: "0 8px" }}>About</span> |
+            <span onClick={() => setView("contact")} style={{ cursor: "pointer", textDecoration: "underline", margin: "0 8px" }}>Contact</span>
+          </p>
+        </footer>
+        <InstallPopup />
+        <BottomMenu />
       </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", margin: "14px 0" }}>
-        <button onClick={() => setView("subjects")} style={yellowBtn}>📚<br />Subjects</button>
-        <button onClick={() => setView("games")} style={yellowBtn}>🎮<br />Games</button>
-        <button onClick={() => setView("leaderboard")} style={yellowBtn}>🏆<br />Leaderboard</button>
-        <button onClick={() => setView("schools")} style={yellowBtn}>🏫<br />For Schools</button>
-        <button onClick={() => setView("comments")} style={yellowBtn}>💬<br />Comments</button>
-        <button onClick={() => setView("about")} style={yellowBtn}>ℹ️<br />About</button>
-        <button onClick={() => setView("contact")} style={{ ...yellowBtn, gridColumn: "span 2" }}>📞<br />Contact</button>
-      </div>
-
-      <div className="info-box">
-        <h3>Why ExamPilot?</h3>
-        <p>Free practice, AI Test, Leaderboard, Games and School Registration. Built for students in Gombe and across Nigeria.</p>
-      </div>
-
-      <footer>
-        <p>Built by Eleazar Alhaji Maaji | ellbezalel9@gmail.com | +234 913 635 5760</p>
-        <p>Gombe State University - Computer Science Education</p>
-      </footer>
-
-      <InstallPopup />
-      <BottomMenu />
-    </div></div>
+    </div>
   );
 }
 
