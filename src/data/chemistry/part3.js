@@ -1,0 +1,23 @@
+const part3 = [
+  { id: 41, topic: "Periodic Table", difficulty: "Easy", question: 'The first element in the periodic table is:', answers: ["Helium", "Hydrogen", "Oxygen", "Lithium"], correct: "Hydrogen", explanation: 'Hydrogen is first with atomic number 1.' },
+  { id: 42, topic: "Atomic Structure", difficulty: "Easy", question: 'The number of electrons in the first shell is maximum:', answers: ["2", "8", "18", "32"], correct: "2", explanation: 'First shell holds maximum 2 electrons.' },
+  { id: 43, topic: "Atomic Structure", difficulty: "Easy", question: 'The number of electrons in the second shell is maximum:', answers: ["2", "8", "18", "32"], correct: "8", explanation: 'Second shell holds maximum 8 electrons.' },
+  { id: 44, topic: "Ions", difficulty: "Easy", question: 'An ion with a positive charge is called:', answers: ["Anion", "Cation", "Atom", "Molecule"], correct: "Cation", explanation: 'Positive ion is cation.' },
+  { id: 45, topic: "Ions", difficulty: "Easy", question: 'An ion with a negative charge is called:', answers: ["Anion", "Cation", "Atom", "Molecule"], correct: "Anion", explanation: 'Negative ion is anion.' },
+  { id: 46, topic: "Bonding", difficulty: "Medium", question: 'The bond formed by sharing of electrons is:', answers: ["Ionic bond", "Covalent bond", "Metallic bond", "Hydrogen bond"], correct: "Covalent bond", explanation: 'Covalent bond is sharing of electrons.' },
+  { id: 47, topic: "Bonding", difficulty: "Medium", question: 'The bond formed by transfer of electrons is:', answers: ["Ionic bond", "Covalent bond", "Metallic bond", "Hydrogen bond"], correct: "Ionic bond", explanation: 'Ionic bond is transfer of electrons.' },
+  { id: 48, topic: "Bonding", difficulty: "Medium", question: 'Which of these is an example of covalent compound?', answers: ["NaCl", "KCl", "H2O", "CaO"], correct: "H2O", explanation: 'Water is covalent.' },
+  { id: 49, topic: "Bonding", difficulty: "Medium", question: 'Which of these is an example of ionic compound?', answers: ["H2O", "CO2", "NaCl", "CH4"], correct: "NaCl", explanation: 'NaCl is ionic.' },
+  { id: 50, topic: "Acids Bases", difficulty: "Easy", question: 'The pH of an acidic solution is:', answers: ["Less than 7", "Equal to 7", "Greater than 7", "Equal to 14"], correct: "Less than 7", explanation: 'Acid pH is less than 7.' },
+  { id: 51, topic: "Acids Bases", difficulty: "Easy", question: 'The pH of a basic solution is:', answers: ["Less than 7", "Equal to 7", "Greater than 7", "Equal to 0"], correct: "Greater than 7", explanation: 'Base pH is greater than 7.' },
+  { id: 52, topic: "Gases", difficulty: "Easy", question: 'The gas that turns lime water milky is:', answers: ["Oxygen", "Carbon dioxide", "Hydrogen", "Nitrogen"], correct: "Carbon dioxide", explanation: 'Carbon dioxide turns lime water milky.' },
+  { id: 53, topic: "Acids", difficulty: "Medium", question: 'The common name for H2SO4 is:', answers: ["Muriatic acid", "Oil of vitriol", "Aqua fortis", "Vinegar"], correct: "Oil of vitriol", explanation: 'Sulphuric acid is called oil of vitriol.' },
+  { id: 54, topic: "Acids", difficulty: "Medium", question: 'Vinegar contains:', answers: ["Citric acid", "Acetic acid", "Lactic acid", "Tartaric acid"], correct: "Acetic acid", explanation: 'Vinegar contains acetic acid.' },
+  { id: 55, topic: "Acids", difficulty: "Medium", question: 'The acid in the stomach is:', answers: ["Sulphuric acid", "Hydrochloric acid", "Nitric acid", "Acetic acid"], correct: "Hydrochloric acid", explanation: 'Stomach contains hydrochloric acid.' },
+  { id: 56, topic: "Organic Chemistry", difficulty: "Medium", question: 'Which of these is an organic compound?', answers: ["NaCl", "H2O", "CH4", "CaCO3"], correct: "CH4", explanation: 'CH4 is methane, an organic compound.' },
+  { id: 57, topic: "Organic Chemistry", difficulty: "Easy", question: 'The simplest hydrocarbon is:', answers: ["Ethane", "Methane", "Propane", "Butane"], correct: "Methane", explanation: 'Methane is the simplest hydrocarbon.' },
+  { id: 58, topic: "Organic Chemistry", difficulty: "Medium", question: 'The general formula for alkanes is:', answers: ["CnH2n", "CnH2n+2", "CnH2n-2", "CnH2n+1"], correct: "CnH2n+2", explanation: 'Alkanes follow CnH2n+2.' },
+  { id: 59, topic: "Organic Chemistry", difficulty: "Medium", question: 'The general formula for alkenes is:', answers: ["CnH2n", "CnH2n+2", "CnH2n-2", "CnHn"], correct: "CnH2n", explanation: 'Alkenes follow CnH2n.' },
+  { id: 60, topic: "Organic Chemistry", difficulty: "Medium", question: 'Ethene is an example of:', answers: ["Alkane", "Alkene", "Alkyne", "Alcohol"], correct: "Alkene", explanation: 'Ethene is an alkene with double bond.' }
+];
+export default part3;

@@ -1,0 +1,23 @@
+const part1 = [
+  { id: 1, topic: "Atomic Structure", difficulty: "Easy", question: 'The smallest particle of an element that takes part in a chemical reaction is:', answers: ["Molecule", "Atom", "Ion", "Electron"], correct: "Atom", explanation: 'Atom is the smallest particle of an element.' },
+  { id: 2, topic: "Atomic Structure", difficulty: "Easy", question: 'The central part of an atom is called:', answers: ["Electron", "Nucleus", "Proton", "Shell"], correct: "Nucleus", explanation: 'Nucleus is at the centre of the atom.' },
+  { id: 3, topic: "Atomic Structure", difficulty: "Easy", question: 'The particle with a negative charge in an atom is:', answers: ["Proton", "Neutron", "Electron", "Nucleus"], correct: "Electron", explanation: 'Electron has a negative charge.' },
+  { id: 4, topic: "Atomic Structure", difficulty: "Easy", question: 'The particle with no charge in an atom is:', answers: ["Proton", "Neutron", "Electron", "Ion"], correct: "Neutron", explanation: 'Neutron has no charge.' },
+  { id: 5, topic: "Atomic Structure", difficulty: "Easy", question: 'The atomic number of an element is the number of:', answers: ["Neutrons", "Protons", "Electrons plus neutrons", "Mass"], correct: "Protons", explanation: 'Atomic number equals number of protons.' },
+  { id: 6, topic: "Atomic Structure", difficulty: "Easy", question: 'The mass number is the sum of:', answers: ["Protons and electrons", "Protons and neutrons", "Neutrons and electrons", "Protons only"], correct: "Protons and neutrons", explanation: 'Mass number equals protons plus neutrons.' },
+  { id: 7, topic: "Atomic Structure", difficulty: "Easy", question: 'An element with atomic number 6 has how many electrons?', answers: ["3", "6", "12", "2"], correct: "6", explanation: 'Number of electrons equals atomic number in a neutral atom.' },
+  { id: 8, topic: "Periodic Table", difficulty: "Easy", question: 'Which of these is a noble gas?', answers: ["Oxygen", "Nitrogen", "Argon", "Chlorine"], correct: "Argon", explanation: 'Argon is a noble gas.' },
+  { id: 9, topic: "Symbols", difficulty: "Easy", question: 'The chemical symbol for sodium is:', answers: ["S", "So", "Na", "N"], correct: "Na", explanation: 'Sodium symbol is Na.' },
+  { id: 10, topic: "Symbols", difficulty: "Easy", question: 'The chemical symbol for iron is:', answers: ["Ir", "Fe", "In", "I"], correct: "Fe", explanation: 'Iron symbol is Fe.' },
+  { id: 11, topic: "Compounds", difficulty: "Easy", question: 'Water is made of:', answers: ["Hydrogen and oxygen", "Hydrogen and nitrogen", "Oxygen and carbon", "Hydrogen and carbon"], correct: "Hydrogen and oxygen", explanation: 'Water is H2O, hydrogen and oxygen.' },
+  { id: 12, topic: "Compounds", difficulty: "Easy", question: 'The formula for common salt is:', answers: ["KCl", "NaCl", "CaCl2", "NaOH"], correct: "NaCl", explanation: 'Common salt is sodium chloride, NaCl.' },
+  { id: 13, topic: "Acids Bases", difficulty: "Easy", question: 'An acid turns blue litmus paper:', answers: ["Red", "Blue", "Green", "Yellow"], correct: "Red", explanation: 'Acid turns blue litmus red.' },
+  { id: 14, topic: "Acids Bases", difficulty: "Easy", question: 'A base turns red litmus paper:', answers: ["Red", "Blue", "Green", "Yellow"], correct: "Blue", explanation: 'Base turns red litmus blue.' },
+  { id: 15, topic: "Acids Bases", difficulty: "Easy", question: 'The pH of a neutral solution is:', answers: ["0", "7", "14", "1"], correct: "7", explanation: 'Neutral pH is 7.' },
+  { id: 16, topic: "Acids Bases", difficulty: "Easy", question: 'Which of these is an acid?', answers: ["NaOH", "HCl", "KOH", "Ca(OH)2"], correct: "HCl", explanation: 'HCl is hydrochloric acid.' },
+  { id: 17, topic: "Acids Bases", difficulty: "Easy", question: 'Which of these is a base?', answers: ["HCl", "H2SO4", "NaOH", "HNO3"], correct: "NaOH", explanation: 'NaOH is sodium hydroxide, a base.' },
+  { id: 18, topic: "Gases", difficulty: "Easy", question: 'The gas used in photosynthesis is:', answers: ["Oxygen", "Carbon dioxide", "Nitrogen", "Hydrogen"], correct: "Carbon dioxide", explanation: 'Plants use carbon dioxide.' },
+  { id: 19, topic: "Gases", difficulty: "Easy", question: 'The gas needed for burning is:', answers: ["Nitrogen", "Carbon dioxide", "Oxygen", "Hydrogen"], correct: "Oxygen", explanation: 'Oxygen supports burning.' },
+  { id: 20, topic: "Metals", difficulty: "Easy", question: 'Which of these is a metal?', answers: ["Sulphur", "Oxygen", "Iron", "Chlorine"], correct: "Iron", explanation: 'Iron is a metal.' }
+];
+export default part1;
