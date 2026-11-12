@@ -157,258 +157,7 @@ function App() {
     }
     setInstallPrompt(null);
   };
-  // --- 4. EXISTING PRACTICE, GAMES & COMMUNITY FUNCTIONS ---
-  useEffect(() => {
-    if (!gameActive) return;
-    if (gameTime <= 0) {
-      setGameActive(false);
-      setGameMessage("Time is up. Your score is " + gameScore);
-      return;
-    }
-    const timer = setTimeout(() => setGameTime(gameTime - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [gameTime, gameActive, gameScore]);
 
-  const startPractice = (subj, testMode) => {
-    setSubject(subj);
-    setMode(testMode);
-    let qs = [...(realQuestionBanks[subj] || [])];
-    if (testMode === "aitest") {
-      qs = qs.sort(() => 0.5 - Math.random()).slice(0, 20);
-    }
-    setQuizQuestions(qs);
-    setCurrentQ(0);
-    setScore(0);
-    setSelected(null);
-    setShowResult(false);
-    setView("quiz");
-  };
-
-  const isOptionCorrect = (qObj, idx) => {
-    const letters = ["A", "B", "C", "D"];
-    return qObj.answer === idx || qObj.answer === letters[idx];
-  };
-
-  const answerQuestion = (idx) => {
-    if (selected !== null) return;
-    setSelected(idx);
-    if (isOptionCorrect(quizQuestions[currentQ], idx)) {
-      setScore(score + 1);
-    }
-  };
-
-  const nextQuestion = () => {
-    if (currentQ + 1 >= quizQuestions.length) {
-      setShowResult(true);
-      const finalScore =
-        score + (isOptionCorrect(quizQuestions[currentQ], selected) ? 1 : 0);
-      if (playerName || mode === "aitest") {
-        const entry = {
-          name: playerName || "Anonymous Student",
-          subject,
-          score: finalScore,
-          total: quizQuestions.length,
-          mode,
-          date: new Date().toLocaleDateString(),
-        };
-        const updated = [entry, ...leaderboard].slice(0, 20);
-        setLeaderboard(updated);
-        localStorage.setItem("exampilot_leaderboard", JSON.stringify(updated));
-      }
-      return;
-    }
-    setCurrentQ(currentQ + 1);
-    setSelected(null);
-  };
-
-  const registerSchool = () => {
-    if (!schoolName || !schoolEmail) {
-      alert("Please enter the school name and email address.");
-      return;
-    }
-    const newSchool = {
-      name: schoolName,
-      email: schoolEmail,
-      students: schoolStudents,
-      date: new Date().toLocaleDateString(),
-    };
-    const updated = [newSchool, ...schools];
-    setSchools(updated);
-    localStorage.setItem("exampilot_schools", JSON.stringify(updated));
-    alert("Thank you. Your school has been registered. We will contact you at " + schoolEmail);
-    setSchoolName("");
-    setSchoolEmail("");
-    setSchoolStudents("");
-  };
-
-  const addComment = () => {
-    if (!commentName || !commentEmail || !commentText) {
-      alert("Please enter your name, email address and comment.");
-      return;
-    }
-    const newComment = {
-      id: Date.now(),
-      name: commentName,
-      email: commentEmail,
-      text: commentText,
-      likes: 0,
-      liked: false,
-      replies: [],
-    };
-    const updated = [newComment, ...comments];
-    setComments(updated);
-    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
-    setCommentName("");
-    setCommentEmail("");
-    setCommentText("");
-  };
-
-  const likeComment = (id) => {
-    const updated = comments.map((c) =>
-      c.id === id
-        ? { ...c, liked: !c.liked, likes: c.liked ? c.likes - 1 : c.likes + 1 }
-        : c
-    );
-    setComments(updated);
-    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
-  };
-
-  const addReply = (commentId) => {
-    if (!replyName || !replyText) {
-      alert("Please enter your name and reply.");
-      return;
-    }
-    const updated = comments.map((c) =>
-      c.id === commentId
-        ? {
-            ...c,
-            replies: [
-              ...c.replies,
-              { id: Date.now(), name: replyName, text: replyText, likes: 0, liked: false },
-            ],
-          }
-        : c
-    );
-    setComments(updated);
-    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
-    setReplyName("");
-    setReplyText("");
-    setReplyingTo(null);
-  };
-
-  const likeReply = (commentId, replyId) => {
-    const updated = comments.map((c) => {
-      if (c.id === commentId) {
-        const newReplies = c.replies.map((r) =>
-          r.id === replyId
-            ? {
-                ...r,
-                liked: !r.liked,
-                likes: r.liked ? (r.likes || 0) - 1 : (r.likes || 0) + 1,
-              }
-            : r
-        );
-        return { ...c, replies: newReplies };
-      }
-      return c;
-    });
-    setComments(updated);
-    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
-  };
-
-  const startGame = () => {
-    setGameTime(60);
-    setGameScore(0);
-    setGameActive(true);
-    setGameMessage("");
-    setGameInput("");
-  };
-
-  const checkGame = () => {
-    const correct = wordGames[gameIndex].word;
-    if (gameInput.toUpperCase().trim() === correct) {
-      setGameScore(gameScore + 10);
-      setGameMessage("Correct. You earned 10 points.");
-      setGameIndex((gameIndex + 1) % wordGames.length);
-      setGameInput("");
-    } else {
-      setGameMessage("Please try again. Hint: " + wordGames[gameIndex].hint);
-    }
-  };
-
-  // --- SHARED UI STYLES & COMPONENTS ---
-  const yellowBtn = {
-    background: "#FFC107",
-    color: "#0B2C4A",
-    border: "none",
-    padding: "12px 10px",
-    borderRadius: "10px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    fontSize: "14px",
-    width: "100%",
-  };
-  const yellowBtnSmall = {
-    background: "#FFC107",
-    color: "#0B2C4A",
-    border: "none",
-    padding: "10px 14px",
-    borderRadius: "8px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    fontSize: "13px",
-    margin: "5px",
-  };
-  const darkBlueBtn = {
-    background: "#0B2C4A",
-    color: "white",
-    border: "none",
-    padding: "10px 14px",
-    borderRadius: "8px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    fontSize: "13px",
-    margin: "5px",
-  };
-  const optionStyle = (isCorrect, isWrong) => ({
-    display: "block",
-    width: "100%",
-    textAlign: "left",
-    background: isCorrect ? "#C8F7C5" : isWrong ? "#FFCCCC" : "white",
-    border: isCorrect ? "2px solid green" : isWrong ? "2px solid red" : "2px solid #0B2C4A",
-    color: "#0B2C4A",
-    padding: "12px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    margin: "6px 0",
-    fontSize: "14px",
-    fontWeight: "bold",
-  });
-
-  const BottomMenu = () => (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: "#0B2C4A",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "8px 6px",
-        gap: "5px",
-        zIndex: 100,
-        borderTop: "3px solid #FFC107",
-      }}
-    >
-      <button onClick={() => setView("home")} style={{ flex: 1, background: view === "home" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>🏠<br />Home</button>
-      <button onClick={() => setView("cbt_setup")} style={{ flex: 1, background: view === "cbt_setup" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>📝<br />JAMB CBT</button>
-      <button onClick={() => setView("subjects")} style={{ flex: 1, background: view === "subjects" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>📚<br />Subjects</button>
-      <button onClick={() => setView("cbt_history")} style={{ flex: 1, background: view === "cbt_history" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>📊<br />History</button>
-      <button onClick={() => setView("leaderboard")} style={{ flex: 1, background: view === "leaderboard" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>🏆<br />Leaders</button>
-    </div>
-  );
   // --- 2. LOAD SAVED STORAGE DATA ---
   useEffect(() => {
     const savedHistory = localStorage.getItem("exampilot_cbt_history");
@@ -504,16 +253,16 @@ function App() {
 
     const engQuestions = tagSubject(realQuestionBanks.English, "English").slice(0, 60);
     const sub1Questions = tagSubject(
-      realQuestionBanks[selectedCbtSubjects[0]],
-      selectedCbtSubjects[0]
+      realQuestionBanks[selectedCbtSubjects],
+      selectedCbtSubjects
     ).slice(0, 40);
     const sub2Questions = tagSubject(
-      realQuestionBanks[selectedCbtSubjects[1]],
-      selectedCbtSubjects[1]
+      realQuestionBanks[selectedCbtSubjects],
+      selectedCbtSubjects
     ).slice(0, 40);
     const sub3Questions = tagSubject(
-      realQuestionBanks[selectedCbtSubjects[2]],
-      selectedCbtSubjects[2]
+      realQuestionBanks[selectedCbtSubjects],
+      selectedCbtSubjects
     ).slice(0, 40);
 
     const fullExam = shuffle([
@@ -563,619 +312,1009 @@ function App() {
     let totalCorrect = 0;
     const optionLetters = ["A", "B", "C", "D"];
     const activeSubjects = ["English", ...selectedCbtSubjects];
+// Initialize subject breakdown counters
+const breakdown = {};
+activeSubjects.forEach((subj) => {
+breakdown[subj] = { correct: 0, total: 0 };
+});
+cbtQuestions.forEach((q, idx) => {
+const subj = q.subjectName || "English";
+if (!breakdown[subj]) breakdown[subj] = { correct: 0, total: 0 };
+breakdown[subj].total += 1;
+const userAns = answers[idx];
+if (userAns !== undefined) {
+if (userAns === q.answer || optionLetters[userAns] === q.answer) {
+totalCorrect += 1;
+breakdown[subj].correct += 1;
+}
+}
+});
+// Determine Strongest & Weakest Subjects based on percentage accuracy
+let strongest = activeSubjects;
+let weakest = activeSubjects;
+let highestPct = -1;
+let lowestPct = 101;
+activeSubjects.forEach((subj) => {
+const { correct, total } = breakdown[subj];
+const pct = total > 0 ? (correct / total) * 100 : 0;
+if (pct > highestPct) {
+highestPct = pct;
+strongest = subj;
+}
+if (pct < lowestPct) {
+lowestPct = pct;
+weakest = subj;
+}
+});
+const totalQuestions = cbtQuestions.length;
+const percentage = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+const estimatedJamb = Math.round((percentage / 100) * 400);
+const resultRecord = {
+id: Date.now(),
+date: new Date().toLocaleString(),
+subjects: activeSubjects,
+breakdown,
+strongest,
+weakest,
+score: totalCorrect,
+total: totalQuestions,
+percentage: percentage.toFixed(1),
+estimatedJamb,
+};
+// Save to CBT History
+const updatedHistory = [resultRecord, ...cbtHistory].slice(0, 30);
+setCbtHistory(updatedHistory);
+localStorage.setItem("exampilot_cbt_history", JSON.stringify(updatedHistory));
+// Also log to Leaderboard
+const leaderEntry = {
+name: playerName || "JAMB Candidate",
+subject: "JAMB CBT (4 Subjects)",
+score: totalCorrect,
+total: totalQuestions,
+mode: Est. ${estimatedJamb}/400,
+date: new Date().toLocaleDateString(),
+};
+const updatedLeader = [leaderEntry, ...leaderboard].slice(0, 20);
+setLeaderboard(updatedLeader);
+localStorage.setItem("exampilot_leaderboard", JSON.stringify(updatedLeader));
+setCbtScore(totalCorrect);
+setCbtAnalysis(resultRecord);
+setShowSubmitModal(false);
+setExamFinished(true);
+setExamStarted(false);
+setView("result");
+};
+useEffect(() => {
+if (!examStarted || examFinished) return;
+const timer = setInterval(() => {
+setTimeLeft((prev) => {
+if (prev <= 1) {
+clearInterval(timer);
+submitExam();
+return 0;
+}
+return prev - 1;
+});
+}, 1000);
+return () => clearInterval(timer);
+}, [examStarted, examFinished]);
+// --- 4. EXISTING PRACTICE, GAMES & COMMUNITY FUNCTIONS ---
+useEffect(() => {
+if (!gameActive) return;
+if (gameTime <= 0) {
+setGameActive(false);
+setGameMessage("Time is up. Your score is " + gameScore);
+return;
+}
+const timer = setTimeout(() => setGameTime(gameTime - 1), 1000);
+return () => clearTimeout(timer);
+}, [gameTime, gameActive, gameScore]);
+const startPractice = (subj, testMode) => {
+setSubject(subj);
+setMode(testMode);
+let qs = [...(realQuestionBanks[subj] || [])];
+if (testMode === "aitest") {
+qs = qs.sort(() => 0.5 - Math.random()).slice(0, 20);
+}
+setQuizQuestions(qs);
+setCurrentQ(0);
+setScore(0);
+setSelected(null);
+setShowResult(false);
+setView("quiz");
+};
+const isOptionCorrect = (qObj, idx) => {
+const letters = ["A", "B", "C", "D"];
+return qObj.answer === idx || qObj.answer === letters[idx];
+};
+const answerQuestion = (idx) => {
+if (selected !== null) return;
+setSelected(idx);
+if (isOptionCorrect(quizQuestions[currentQ], idx)) {
+setScore(score + 1);
+}
+};
+const nextQuestion = () => {
+if (currentQ + 1 >= quizQuestions.length) {
+setShowResult(true);
+const finalScore =
+score + (isOptionCorrect(quizQuestions[currentQ], selected) ? 1 : 0);
+if (playerName || mode === "aitest") {
+const entry = {
+name: playerName || "Anonymous Student",
+subject,
+score: finalScore,
+total: quizQuestions.length,
+mode,
+date: new Date().toLocaleDateString(),
+};
+const updated = [entry, ...leaderboard].slice(0, 20);
+setLeaderboard(updated);
+localStorage.setItem("exampilot_leaderboard", JSON.stringify(updated));
+}
+return;
+}
+setCurrentQ(currentQ + 1);
+setSelected(null);
+};
+const registerSchool = () => {
+if (!schoolName || !schoolEmail) {
+alert("Please enter the school name and email address.");
+return;
+}
+const newSchool = {
+name: schoolName,
+email: schoolEmail,
+students: schoolStudents,
+date: new Date().toLocaleDateString(),
+};
+const updated = [newSchool, ...schools];
+setSchools(updated);
+localStorage.setItem("exampilot_schools", JSON.stringify(updated));
+alert("Thank you. Your school has been registered. We will contact you at " + schoolEmail);
+setSchoolName("");
+setSchoolEmail("");
+setSchoolStudents("");
+};
+const addComment = () => {
+if (!commentName || !commentEmail || !commentText) {
+alert("Please enter your name, email address and comment.");
+return;
+}
+const newComment = {
+id: Date.now(),
+name: commentName,
+email: commentEmail,
+text: commentText,
+likes: 0,
+liked: false,
+replies: [],
+};
+const updated = [newComment, ...comments];
+setComments(updated);
+localStorage.setItem("exampilot_comments", JSON.stringify(updated));
+setCommentName("");
+setCommentEmail("");
+setCommentText("");
+};
+const likeComment = (id) => {
+const updated = comments.map((c) =>
+c.id === id
+? { ...c, liked: !c.liked, likes: c.liked ? c.likes - 1 : c.likes + 1 }
+: c
+);
+setComments(updated);
+localStorage.setItem("exampilot_comments", JSON.stringify(updated));
+};
+const addReply = (commentId) => {
+if (!replyName || !replyText) {
+alert("Please enter your name and reply.");
+return;
+}
+const updated = comments.map((c) =>
+c.id === commentId
+? {
+...c,
+replies: [
+...c.replies,
+{ id: Date.now(), name: replyName, text: replyText, likes: 0, liked: false },
+],
+}
+: c
+);
+setComments(updated);
+localStorage.setItem("exampilot_comments", JSON.stringify(updated));
+setReplyName("");
+setReplyText("");
+setReplyingTo(null);
+};
+const likeReply = (commentId, replyId) => {
+const updated = comments.map((c) => {
+if (c.id === commentId) {
+const newReplies = c.replies.map((r) =>
+r.id === replyId
+? {
+...r,
+liked: !r.liked,
+likes: r.liked ? (r.likes || 0) - 1 : (r.likes || 0) + 1,
+}
+: r
+);
+return { ...c, replies: newReplies };
+}
+return c;
+});
+setComments(updated);
+localStorage.setItem("exampilot_comments", JSON.stringify(updated));
+};
+const startGame = () => {
+setGameTime(60);
+setGameScore(0);
+setGameActive(true);
+setGameMessage("");
+setGameInput("");
+};
+const checkGame = () => {
+const correct = wordGames[gameIndex].word;
+if (gameInput.toUpperCase().trim() === correct) {
+setGameScore(gameScore + 10);
+setGameMessage("Correct. You earned 10 points.");
+setGameIndex((gameIndex + 1) % wordGames.length);
+setGameInput("");
+} else {
+setGameMessage("Please try again. Hint: " + wordGames[gameIndex].hint);
+}
+};
+// --- SHARED UI STYLES & COMPONENTS ---
+const yellowBtn = {
+background: "#FFC107",
+color: "#0B2C4A",
+border: "none",
+padding: "12px 10px",
+borderRadius: "10px",
+fontWeight: "bold",
+cursor: "pointer",
+fontSize: "14px",
+width: "100%",
+};
+const yellowBtnSmall = {
+background: "#FFC107",
+color: "#0B2C4A",
+border: "none",
+padding: "10px 14px",
+borderRadius: "8px",
+fontWeight: "bold",
+cursor: "pointer",
+fontSize: "13px",
+margin: "5px",
+};
+const darkBlueBtn = {
+background: "#0B2C4A",
+color: "white",
+border: "none",
+padding: "10px 14px",
+borderRadius: "8px",
+fontWeight: "bold",
+cursor: "pointer",
+fontSize: "13px",
+margin: "5px",
+};
+const optionStyle = (isCorrect, isWrong) => ({
+display: "block",
+width: "100%",
+textAlign: "left",
+background: isCorrect ? "#C8F7C5" : isWrong ? "#FFCCCC" : "white",
+border: isCorrect ? "2px solid green" : isWrong ? "2px solid red" : "2px solid #0B2C4A",
+color: "#0B2C4A",
+padding: "12px",
+borderRadius: "8px",
+cursor: "pointer",
+margin: "6px 0",
+fontSize: "14px",
+fontWeight: "bold",
+});
+const BottomMenu = () => (
+<div
+style={{
+position: "fixed",
+bottom: 0,
+left: 0,
+right: 0,
+background: "#0B2C4A",
+display: "flex",
+justifyContent: "space-between",
+alignItems: "center",
+padding: "8px 6px",
+gap: "5px",
+zIndex: 100,
+borderTop: "3px solid #FFC107",
+}}
+>
+<button onClick={() => setView("home")} style={{ flex: 1, background: view === "home" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>🏠
+Home
+<button onClick={() => setView("cbt_setup")} style={{ flex: 1, background: view === "cbt_setup" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>📝
+JAMB CBT
+<button onClick={() => setView("subjects")} style={{ flex: 1, background: view === "subjects" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>📚
+Subjects
+<button onClick={() => setView("cbt_history")} style={{ flex: 1, background: view === "cbt_history" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>📊
+History
+<button onClick={() => setView("leaderboard")} style={{ flex: 1, background: view === "leaderboard" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>🏆
+Leaders
 
-    // Initialize subject breakdown counters
-    const breakdown = {};
-    activeSubjects.forEach((subj) => {
-      breakdown[subj] = { correct: 0, total: 0 };
-    });
+);
+// =========================================================
+// VIEW: EXISTING DOWNLOAD / INSTALL PAGE (PRESERVED)
+// =========================================================
+if (view === "download") {
+return (
+<div style={{ minHeight: "100vh", background: "#0B2C4A", color: "white", textAlign: "center", padding: "30px 20px", fontFamily: "Arial" }}>
+<div style={{ fontSize: "60px" }}>🎓
+<h1 style={{ fontSize: "28px", margin: "10px 0" }}>Download ExamPilot Free JAMB CBT App
+<p style={{ color: "#FFC107", fontWeight: "bold", fontSize: "16px" }}>
+Practice JAMB, WAEC and School Exams. Play Games. Pass with Confidence.
 
-    cbtQuestions.forEach((q, idx) => {
-      const subj = q.subjectName || "English";
-      if (!breakdown[subj]) breakdown[subj] = { correct: 0, total: 0 };
-      breakdown[subj].total += 1;
+<div style={{ background: "white", color: "#0B2C4A", borderRadius: "15px", padding: "20px", margin: "20px 0", textAlign: "left" }}>
+<p style={{ margin: "5px 0" }}>✅ Free Forever
+<p style={{ margin: "5px 0" }}>📴 Works Offline
+<p style={{ margin: "5px 0" }}>📚 900+ Real SS1–SS3 Questions
+<p style={{ margin: "5px 0" }}>🎮 Play Games and Learn
+<p style={{ margin: "5px 0" }}>⚡ Fast and Light - Works on any phone
 
-      const userAns = answers[idx];
-      if (userAns !== undefined) {
-        if (userAns === q.answer || optionLetters[userAns] === q.answer) {
-          totalCorrect += 1;
-          breakdown[subj].correct += 1;
-        }
-      }
-    });
+<button
+onClick={handleInstall}
+style={{ background: "#FFC107", color: "#0B2C4A", border: "none", padding: "16px", borderRadius: "12px", fontWeight: "bold", fontSize: "17px", width: "100%", cursor: "pointer" }}
+>
+📲 Install ExamPilot App
 
-    // Determine Strongest & Weakest Subjects based on percentage accuracy
-    let strongest = activeSubjects[0];
-    let weakest = activeSubjects[0];
-    let highestPct = -1;
-    let lowestPct = 101;
+<p style={{ fontSize: "13px", color: "#ccc", marginTop: "12px", lineHeight: "1.6" }}>
+Install ExamPilot for offline practice and faster access.
 
-    activeSubjects.forEach((subj) => {
-      const { correct, total } = breakdown[subj];
-      const pct = total > 0 ? (correct / total) * 100 : 0;
-      if (pct > highestPct) {
-        highestPct = pct;
-        strongest = subj;
-      }
-      if (pct < lowestPct) {
-        lowestPct = pct;
-        weakest = subj;
-      }
-    });
+<p style={{ fontSize: "13px", color: "#ccc", marginTop: "4px" }}>
+{installPrompt ? "Tap the button above to install ExamPilot" : "Tap ⋮ in Chrome → Install App or Add to Home Screen"}
 
-    const totalQuestions = cbtQuestions.length;
-    const percentage = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
-    const estimatedJamb = Math.round((percentage / 100) * 400);
+<p style={{ color: "#FFC107", fontWeight: "bold" }}>
+⭐⭐⭐⭐⭐ 4.9 • Loved by students in Gombe & Nigeria
 
-    const resultRecord = {
-      id: Date.now(),
-      date: new Date().toLocaleString(),
-      subjects: activeSubjects,
-      breakdown,
-      strongest,
-      weakest,
-      score: totalCorrect,
-      total: totalQuestions,
-      percentage: percentage.toFixed(1),
-      estimatedJamb,
-    };
+<div style={{ marginTop: "25px" }}>
+{canContinue ? (
+<button
+onClick={() => setView("home")}
+style={{ background: "white", color: "#0B2C4A", border: "none", padding: "14px", borderRadius: "10px", fontWeight: "bold", fontSize: "15px", width: "100%", cursor: "pointer" }}
+>
+Continue on Website →
 
-    // Save to CBT History
-    const updatedHistory = [resultRecord, ...cbtHistory].slice(0, 30);
-    setCbtHistory(updatedHistory);
-    localStorage.setItem("exampilot_cbt_history", JSON.stringify(updatedHistory));
+) : (
+<p style={{ background: "rgba(255,255,255,0.15)", padding: "12px", borderRadius: "10px" }}>
+Continue in {countdown} seconds...
 
-    // Also log to Leaderboard
-    const leaderEntry = {
-      name: playerName || "JAMB Candidate",
-      subject: "JAMB CBT (4 Subjects)",
-      score: totalCorrect,
-      total: totalQuestions,
-      mode: `Est. ${estimatedJamb}/400`,
-      date: new Date().toLocaleDateString(),
-    };
-    const updatedLeader = [leaderEntry, ...leaderboard].slice(0, 20);
-    setLeaderboard(updatedLeader);
-    localStorage.setItem("exampilot_leaderboard", JSON.stringify(updatedLeader));
+)}
+<p style={{ fontSize: "12px", color: "#aaa", marginTop: "8px" }}>
+For people who do not want to install yet
 
-    setCbtScore(totalCorrect);
-    setCbtAnalysis(resultRecord);
-    setShowSubmitModal(false);
-    setExamFinished(true);
-    setExamStarted(false);
-    setView("result");
-  };
 
-  useEffect(() => {
-    if (!examStarted || examFinished) return;
+<div style={{ marginTop: "30px", fontSize: "12px", color: "#ccc", lineHeight: "1.8" }}>
+Built by Eleazar Alhaji Maaji | ellbezalel9@gmail.com
+Privacy Policy | Terms and Services | Contact
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          submitExam();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
 
-    return () => clearInterval(timer);
-  }, [examStarted, examFinished]);
-  // --- 4. EXISTING PRACTICE, GAMES & COMMUNITY FUNCTIONS ---
-  useEffect(() => {
-    if (!gameActive) return;
-    if (gameTime <= 0) {
-      setGameActive(false);
-      setGameMessage("Time is up. Your score is " + gameScore);
-      return;
-    }
-    const timer = setTimeout(() => setGameTime(gameTime - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [gameTime, gameActive, gameScore]);
+);
+}
+// =========================================================
+// VIEW: JAMB CBT SUBJECT COMBINATION SETUP
+// =========================================================
+if (view === "cbt_setup") {
+return (
 
-  const startPractice = (subj, testMode) => {
-    setSubject(subj);
-    setMode(testMode);
-    let qs = [...(realQuestionBanks[subj] || [])];
-    if (testMode === "aitest") {
-      qs = qs.sort(() => 0.5 - Math.random()).slice(0, 20);
-    }
-    setQuizQuestions(qs);
-    setCurrentQ(0);
-    setScore(0);
-    setSelected(null);
-    setShowResult(false);
-    setView("quiz");
-  };
 
-  const isOptionCorrect = (qObj, idx) => {
-    const letters = ["A", "B", "C", "D"];
-    return qObj.answer === idx || qObj.answer === letters[idx];
-  };
+<div className="App-content" style={{ paddingBottom: "90px" }}>
+JAMB CBT Exam Setup
+180 Questions • 3 Hours (03:00:00)
+<input
+placeholder="Candidate Name (optional)"
+value={playerName}
+onChange={(e) => setPlayerName(e.target.value)}
+className="input-box"
+/>
+<div style={{ background: "#0B2C4A", color: "white", padding: "12px", borderRadius: "10px", margin: "10px 0", textAlign: "left" }}>
+✅ English Language (Compulsory - 60 Questions)
 
-  const answerQuestion = (idx) => {
-    if (selected !== null) return;
-    setSelected(idx);
-    if (isOptionCorrect(quizQuestions[currentQ], idx)) {
-      setScore(score + 1);
-    }
-  };
+<p style={{ fontWeight: "bold", color: "#0B2C4A", marginTop: "15px" }}>
+Select 3 Other Subjects (40 Questions Each): {selectedCbtSubjects.length}/3 Selected
 
-  const nextQuestion = () => {
-    if (currentQ + 1 >= quizQuestions.length) {
-      setShowResult(true);
-      const finalScore =
-        score + (isOptionCorrect(quizQuestions[currentQ], selected) ? 1 : 0);
-      if (playerName || mode === "aitest") {
-        const entry = {
-          name: playerName || "Anonymous Student",
-          subject,
-          score: finalScore,
-          total: quizQuestions.length,
-          mode,
-          date: new Date().toLocaleDateString(),
-        };
-        const updated = [entry, ...leaderboard].slice(0, 20);
-        setLeaderboard(updated);
-        localStorage.setItem("exampilot_leaderboard", JSON.stringify(updated));
-      }
-      return;
-    }
-    setCurrentQ(currentQ + 1);
-    setSelected(null);
-  };
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "20px" }}>
+{optionalSubjectsList.map((subj) => {
+const isSelected = selectedCbtSubjects.includes(subj);
+return (
+<button
+key={subj}
+onClick={() => toggleCbtSubject(subj)}
+style={{
+padding: "12px",
+borderRadius: "10px",
+border: "2px solid #0B2C4A",
+background: isSelected ? "#FFC107" : "white",
+color: "#0B2C4A",
+fontWeight: "bold",
+cursor: "pointer",
+}}
+>
+{isSelected ? "☑ " : "☐ "} {subj}
 
-  const registerSchool = () => {
-    if (!schoolName || !schoolEmail) {
-      alert("Please enter the school name and email address.");
-      return;
-    }
-    const newSchool = {
-      name: schoolName,
-      email: schoolEmail,
-      students: schoolStudents,
-      date: new Date().toLocaleDateString(),
-    };
-    const updated = [newSchool, ...schools];
-    setSchools(updated);
-    localStorage.setItem("exampilot_schools", JSON.stringify(updated));
-    alert("Thank you. Your school has been registered. We will contact you at " + schoolEmail);
-    setSchoolName("");
-    setSchoolEmail("");
-    setSchoolStudents("");
-  };
+);
+})}
 
-  const addComment = () => {
-    if (!commentName || !commentEmail || !commentText) {
-      alert("Please enter your name, email address and comment.");
-      return;
-    }
-    const newComment = {
-      id: Date.now(),
-      name: commentName,
-      email: commentEmail,
-      text: commentText,
-      likes: 0,
-      liked: false,
-      replies: [],
-    };
-    const updated = [newComment, ...comments];
-    setComments(updated);
-    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
-    setCommentName("");
-    setCommentEmail("");
-    setCommentText("");
-  };
+<button
+onClick={startJambCBT}
+style={{
+...yellowBtn,
+padding: "15px",
+fontSize: "16px",
+opacity: selectedCbtSubjects.length === 3 ? 1 : 0.6,
+}}
+>
+🚀 Start 180-Question CBT Exam
 
-  const likeComment = (id) => {
-    const updated = comments.map((c) =>
-      c.id === id
-        ? { ...c, liked: !c.liked, likes: c.liked ? c.likes - 1 : c.likes + 1 }
-        : c
-    );
-    setComments(updated);
-    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
-  };
+<button onClick={() => setView("home")} style={{ ...darkBlueBtn, width: "100%", marginTop: "10px" }}>
+Back Home
 
-  const addReply = (commentId) => {
-    if (!replyName || !replyText) {
-      alert("Please enter your name and reply.");
-      return;
-    }
-    const updated = comments.map((c) =>
-      c.id === commentId
-        ? {
-            ...c,
-            replies: [
-              ...c.replies,
-              { id: Date.now(), name: replyName, text: replyText, likes: 0, liked: false },
-            ],
-          }
-        : c
-    );
-    setComments(updated);
-    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
-    setReplyName("");
-    setReplyText("");
-    setReplyingTo(null);
-  };
 
-  const likeReply = (commentId, replyId) => {
-    const updated = comments.map((c) => {
-      if (c.id === commentId) {
-        const newReplies = c.replies.map((r) =>
-          r.id === replyId
-            ? {
-                ...r,
-                liked: !r.liked,
-                likes: r.liked ? (r.likes || 0) - 1 : (r.likes || 0) + 1,
-              }
-            : r
-        );
-        return { ...c, replies: newReplies };
-      }
-      return c;
-    });
-    setComments(updated);
-    localStorage.setItem("exampilot_comments", JSON.stringify(updated));
-  };
 
-  const startGame = () => {
-    setGameTime(60);
-    setGameScore(0);
-    setGameActive(true);
-    setGameMessage("");
-    setGameInput("");
-  };
 
-  const checkGame = () => {
-    const correct = wordGames[gameIndex].word;
-    if (gameInput.toUpperCase().trim() === correct) {
-      setGameScore(gameScore + 10);
-      setGameMessage("Correct. You earned 10 points.");
-      setGameIndex((gameIndex + 1) % wordGames.length);
-      setGameInput("");
-    } else {
-      setGameMessage("Please try again. Hint: " + wordGames[gameIndex].hint);
-    }
-  };
+);
+}
+// =========================================================
+// VIEW: REAL JAMB CBT PORTAL (NAVIGATOR + SUBMIT MODAL)
+// =========================================================
+if (view === "cbt") {
+const q = cbtQuestions[currentQuestion];
+const questionText = q.question || q.q;
+const optionLetters = ["A", "B", "C", "D"];
+const answeredCount = Object.keys(answers).length;
+const unansweredCount = cbtQuestions.length - answeredCount;
+return (
 
-  // --- SHARED UI STYLES & COMPONENTS ---
-  const yellowBtn = {
-    background: "#FFC107",
-    color: "#0B2C4A",
-    border: "none",
-    padding: "12px 10px",
-    borderRadius: "10px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    fontSize: "14px",
-    width: "100%",
-  };
-  const yellowBtnSmall = {
-    background: "#FFC107",
-    color: "#0B2C4A",
-    border: "none",
-    padding: "10px 14px",
-    borderRadius: "8px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    fontSize: "13px",
-    margin: "5px",
-  };
-  const darkBlueBtn = {
-    background: "#0B2C4A",
-    color: "white",
-    border: "none",
-    padding: "10px 14px",
-    borderRadius: "8px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    fontSize: "13px",
-    margin: "5px",
-  };
-  const optionStyle = (isCorrect, isWrong) => ({
-    display: "block",
-    width: "100%",
-    textAlign: "left",
-    background: isCorrect ? "#C8F7C5" : isWrong ? "#FFCCCC" : "white",
-    border: isCorrect ? "2px solid green" : isWrong ? "2px solid red" : "2px solid #0B2C4A",
-    color: "#0B2C4A",
-    padding: "12px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    margin: "6px 0",
-    fontSize: "14px",
-    fontWeight: "bold",
-  });
 
-  const BottomMenu = () => (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: "#0B2C4A",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "8px 6px",
-        gap: "5px",
-        zIndex: 100,
-        borderTop: "3px solid #FFC107",
-      }}
-    >
-      <button onClick={() => setView("home")} style={{ flex: 1, background: view === "home" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>🏠<br />Home</button>
-      <button onClick={() => setView("cbt_setup")} style={{ flex: 1, background: view === "cbt_setup" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>📝<br />JAMB CBT</button>
-      <button onClick={() => setView("subjects")} style={{ flex: 1, background: view === "subjects" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>📚<br />Subjects</button>
-      <button onClick={() => setView("cbt_history")} style={{ flex: 1, background: view === "cbt_history" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>📊<br />History</button>
-      <button onClick={() => setView("leaderboard")} style={{ flex: 1, background: view === "leaderboard" ? "#FFC107" : "#FFD54A", color: "#0B2C4A", border: "none", padding: "10px 2px", borderRadius: "8px", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>🏆<br />Leaders</button>
-    </div>
-  );
-  // =========================================================
-  // VIEW: JAMB CBT RESULT & SUBJECT SCORE ANALYSIS
-  // =========================================================
-  if (view === "result" && cbtAnalysis) {
-    const pct = parseFloat(cbtAnalysis.percentage);
+<div className="App-content" style={{ padding: "15px", paddingBottom: "40px" }}>
+{/* Top CBT Status Header */}
+<div
+style={{
+background: "#0B2C4A",
+color: "white",
+padding: "12px 15px",
+borderRadius: "10px",
+display: "flex",
+justifyContent: "space-between",
+alignItems: "center",
+marginBottom: "12px",
+}}
+>
+<div style={{ textAlign: "left" }}>
+<b style={{ fontSize: "15px" }}>JAMB CBT
+<p style={{ margin: 0, fontSize: "12px", color: "#FFC107" }}>
+Subject: {q.subjectName || "General"}
 
-    let levelLabel = "Needs Improvement";
-    let levelBg = "#f8d7da";
-    let levelColor = "#721c24";
 
-    if (pct >= 90) {
-      levelLabel = "Excellent";
-      levelBg = "#d4edda";
-      levelColor = "#155724";
-    } else if (pct >= 75) {
-      levelLabel = "Very Good";
-      levelBg = "#d1ecf1";
-      levelColor = "#0c5460";
-    } else if (pct >= 60) {
-      levelLabel = "Good";
-      levelBg = "#fff3cd";
-      levelColor = "#856404";
-    } else if (pct >= 50) {
-      levelLabel = "Fair";
-      levelBg = "#ffeeba";
-      levelColor = "#856404";
-    }
+<div
+style={{
+background: timeLeft < 600 ? "#d9534f" : "#FFC107",
+color: timeLeft < 600 ? "white" : "#0B2C4A",
+padding: "8px 12px",
+borderRadius: "8px",
+fontWeight: "bold",
+fontSize: "16px",
+fontFamily: "monospace",
+}}
+>
+⏱ {formatTimer(timeLeft)}
 
-    return (
-      <div className="App">
-        <div className="top-banner"></div>
-        <div className="App-content" style={{ paddingBottom: "95px" }}>
-          <h1>JAMB CBT RESULT</h1>
 
-          {/* Colored Summary Performance Card */}
-          <div
-            style={{
-              background: levelBg,
-              color: levelColor,
-              padding: "16px",
-              borderRadius: "12px",
-              marginBottom: "15px",
-              border: `2px solid ${levelColor}`,
-            }}
-          >
-            <h2 style={{ margin: "0 0 5px" }}>{levelLabel}</h2>
-            <p style={{ margin: 0, fontWeight: "bold" }}>
-              Estimated JAMB Score: {cbtAnalysis.estimatedJamb} / 400
-            </p>
-          </div>
+{/* Unanswered Status Bar & Review Button */}
+<div
+style={{
+display: "flex",
+justifyContent: "space-between",
+alignItems: "center",
+background: "white",
+padding: "8px 12px",
+borderRadius: "8px",
+marginBottom: "12px",
+border: "1px solid #ddd",
+fontSize: "12px",
+}}
+>
 
-          {/* Subject Breakdown Box */}
-          <div
-            style={{
-              background: "white",
-              padding: "16px",
-              borderRadius: "12px",
-              textAlign: "left",
-              marginBottom: "15px",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-            }}
-          >
-            <h3 style={{ marginTop: 0, color: "#0B2C4A" }}>Subject Score Breakdown</h3>
-            {cbtAnalysis.subjects.map((subj) => {
-              const item = cbtAnalysis.breakdown[subj] || { correct: 0, total: 0 };
-              return (
-                <p
-                  key={subj}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    borderBottom: "1px solid #eee",
-                    paddingBottom: "6px",
-                    margin: "8px 0",
-                    fontWeight: "bold",
-                  }}
-                >
-                  <span>{subj}:</span>
-                  <span>
-                    {item.correct} / {item.total}
-                  </span>
-                </p>
-              );
-            })}
+{unansweredCount > 0
+? ⚠️ You still have ${unansweredCount} unanswered questions.
+: "✅ All questions answered."}
 
-            <div style={{ marginTop: "12px", paddingTop: "8px", borderTop: "2px solid #0B2C4A" }}>
-              <p style={{ margin: "4px 0" }}>
-                <b>Total:</b> {cbtAnalysis.score} / {cbtAnalysis.total}
-              </p>
-              <p style={{ margin: "4px 0" }}>
-                <b>Percentage:</b> {cbtAnalysis.percentage}%
-              </p>
-              <p style={{ margin: "4px 0", color: "green" }}>
-                <b>Strongest Subject:</b> {cbtAnalysis.strongest}
-              </p>
-              <p style={{ margin: "4px 0", color: "#d9534f" }}>
-                <b>Weakest Subject:</b> {cbtAnalysis.weakest}
-              </p>
-            </div>
-          </div>
+<button
+onClick={reviewUnanswered}
+style={{
+background: "#0B2C4A",
+color: "#FFC107",
+border: "none",
+padding: "6px 10px",
+borderRadius: "6px",
+fontWeight: "bold",
+fontSize: "11px",
+cursor: "pointer",
+}}
+>
+Review Unanswered
 
-          <button onClick={() => setView("cbt_setup")} style={yellowBtnSmall}>
-            Take Another CBT
-          </button>
-          <button onClick={() => setView("cbt_history")} style={darkBlueBtn}>
-            My CBT History
-          </button>
-          <button onClick={() => setView("home")} style={darkBlueBtn}>
-            Back Home
-          </button>
 
-          <BottomMenu />
-        </div>
-      </div>
-    );
-  }
+{unansweredNotice && (
+<p style={{ color: "green", fontWeight: "bold", fontSize: "13px", margin: "5px 0" }}>
+{unansweredNotice}
 
-  // =========================================================
-  // VIEW: MY CBT HISTORY
-  // =========================================================
-  if (view === "cbt_history") {
-    return (
-      <div className="App">
-        <div className="top-banner"></div>
-        <div className="App-content" style={{ paddingBottom: "95px" }}>
-          <h1>My CBT History</h1>
-          <p>Previous 180-Question JAMB CBT Attempts</p>
+)}
+{/* 1. QUESTION NAVIGATOR */}
+<div
+style={{
+display: "flex",
+flexWrap: "wrap",
+justifyContent: "center",
+marginBottom: "20px",
+background: "white",
+padding: "10px",
+borderRadius: "10px",
+border: "1px solid #ddd",
+maxHeight: "165px",
+overflowY: "auto",
+}}
+>
+{cbtQuestions.map((_, index) => {
+const answered = answers[index] !== undefined;
+const current = index === currentQuestion;
+return (
+<button
+key={index}
+onClick={() => setCurrentQuestion(index)}
+style={{
+width: "42px",
+height: "42px",
+margin: "4px",
+borderRadius: "8px",
+border: "1px solid #ccc",
+fontWeight: "bold",
+background: current
+? "#FFC107"
+: answered
+? "#22C55E"
+: "#FFFFFF",
+color: current || answered ? "white" : "#0B2C4A",
+cursor: "pointer",
+}}
+>
+{index + 1}
 
-          {cbtHistory.length === 0 && (
-            <p>No CBT attempts recorded yet. Start a JAMB CBT exam to track your progress!</p>
-          )}
+);
+})}
 
-          {cbtHistory.map((item) => (
-            <div
-              key={item.id}
-              className="leader-card"
-              style={{ textAlign: "left", padding: "14px", marginBottom: "10px" }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <b>Est. JAMB: {item.estimatedJamb}/400</b>
-                <span style={{ fontSize: "12px", color: "#666" }}>{item.date}</span>
-              </div>
-              <p style={{ margin: "6px 0", fontSize: "13px" }}>
-                <b>Subjects:</b> {item.subjects.join(", ")}
-              </p>
-              <p style={{ margin: 0, fontSize: "13px" }}>
-                <b>Score:</b> {item.score}/{item.total} ({item.percentage}%)
-              </p>
-            </div>
-          ))}
+{/* Active Question Card */}
+<div className="question-box" style={{ textAlign: "left" }}>
+<p style={{ margin: "0 0 6px", fontSize: "12px", color: "#666", fontWeight: "bold" }}>
+Question {currentQuestion + 1} of {cbtQuestions.length}
 
-          <button onClick={() => setView("cbt_setup")} style={yellowBtnSmall}>
-            New JAMB CBT
-          </button>
-          <button onClick={() => setView("home")} style={darkBlueBtn}>
-            Go Home
-          </button>
-          <BottomMenu />
-        </div>
-      </div>
-    );
-  }
+<h3 style={{ marginTop: 0, fontSize: "16px", lineHeight: "1.5" }}>{questionText}
+{q.options.map((option, idx) => {
+const isSelected = answers[currentQuestion] === idx;
+return (
+<button
+key={idx}
+onClick={() => selectAnswer(idx)}
+style={{
+display: "block",
+width: "100%",
+textAlign: "left",
+marginBottom: "10px",
+padding: "13px",
+borderRadius: "8px",
+border: isSelected ? "2px solid #0B2C4A" : "1px solid #ccc",
+background: isSelected ? "#FFC107" : "white",
+color: "#0B2C4A",
+fontWeight: isSelected ? "bold" : "normal",
+fontSize: "14px",
+cursor: "pointer",
+}}
+>
+{optionLetters[idx]}. {option}
 
-  // =========================================================
-  // EXISTING PRACTICE, COMMUNITY, GAMES & HOME VIEWS
-  // =========================================================
-  if (view === "quiz") {
-    if (showResult) {
-      return (
-        <div className="App">
-          <div className="App-content">
-            <h1>Your Result</h1>
-            <h2>
-              {score} / {quizQuestions.length}
-            </h2>
-            <p>
-              {subject} - {mode === "aitest" ? "AI Test" : "Practice"}
-            </p>
-            <p>
-              {score >= quizQuestions.length * 0.7
-                ? "Excellent. You are ready for JAMB."
-                : score >= quizQuestions.length * 0.5
-                ? "Good work. Keep practicing."
-                : "Do not give up. Practice more and you will improve."}
-            </p>
-            <button onClick={() => setView("subjects")} style={yellowBtnSmall}>
-              Try Another Subject
-            </button>
-            <button onClick={() => setView("home")} style={darkBlueBtn}>
-              Go Home
-            </button>
-            <BottomMenu />
-          </div>
-        </div>
-      );
-    }
-    const q = quizQuestions[currentQ];
-    const qText = q.question || q.q;
-    return (
-      <div className="App">
-        <div className="App-content">
-          <h2>
-            {subject} - {mode === "aitest" ? "AI Test" : "Practice"}
-          </h2>
-          <p>
-            Question {currentQ + 1} of {quizQuestions.length} | Score: {score}
-          </p>
-          <div className="question-box">
-            <h3>{qText}</h3>
-            {q.options.map((opt, idx) => (
-              <button
-                key={idx}
-                onClick={() => answerQuestion(idx)}
-                style={optionStyle(
-                  selected !== null && isOptionCorrect(q, idx),
-                  selected === idx && !isOptionCorrect(q, idx)
-                )}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-          {selected !== null && (
-            <button onClick={nextQuestion} style={yellowBtnSmall}>
-              {currentQ + 1 === quizQuestions.length ? "Finish" : "Next Question"}
-            </button>
-          )}
-          <BottomMenu />
-        </div>
-      </div>
-    );
-  }
+);
+})}
 
-  if (view === "comments") {
-    return (
-      <div className="App">
-        <div className="top-banner"></div>
-        <div className="App-content" style={{ paddingBottom: "90px" }}>
-          <h1>What Students Are Saying</h1>
-          <input placeholder="Your Full Name, for example Musa Bello" value={commentName} onChange={(e) => setCommentName(e.target.value)} className="input-box" />
-          <input placeholder="Your Email Address, for example musa@gmail.com" value={commentEmail} onChange={(e) => setCommentEmail(e.target.value)} className="input-box" type="email" />
-          <textarea placeholder="Write your comment here." value={commentText} onChange={(e) => setCommentText(e.target.value)} className="textarea-box" />
-          <button onClick={addComment} style={yellowBtnSmall}>Post Comment</button>
-          <hr />
-          {comments.map((c) => (
-            <div key={c.id} className="comment-card">
-              <b>{c.name}</b>
-              <p className="comment-email">{c.email}</p>
-              <p>{c.text}</p>
-              <div className="comment-actions">
-                <button onClick={() => likeComment(c.id)} style={{ background: c.liked ? "#FFC107" : "white", color: "#0B2C4A", border: "1px solid #FFC107", padding: "6px 10px", borderRadius: "8px", fontWeight: "bold", fontSize: "12px", cursor: "pointer" }}>
-                  {c.liked ? "❤️" : "🤍"} {c.likes} Like
-                </button>
-                <button onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)} style={darkBlueBtn}>
-                  💬 Reply ({c.replies.length})
-                </button>
-              </div>
-              {replyingTo === c.id && (
-                <div className="reply-box">
-                  <input placeholder="Your Name, for example Eleazar - Founder" value={replyName} onChange={(e) => setReplyName(e.target.value)} className="input-box" />
-                  <textarea placeholder="Write your reply." value={replyText} onChange={(e) => setReplyText(e.target.value)} className="textarea-box" />
-                  <button onClick={() => addReply(c.id)} style={yellowBtnSmall}>Send Reply</button>
+{/* Touch-Friendly Navigation Bar */}
+<div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+<button
+disabled={currentQuestion === 0}
+onClick={() => setCurrentQuestion(currentQuestion - 1)}
+style={{
+...darkBlueBtn,
+flex: 1,
+margin: 0,
+padding: "14px",
+opacity: currentQuestion === 0 ? 0.5 : 1,
+}}
+>
+← Previous
+
+<button
+disabled={currentQuestion === cbtQuestions.length - 1}
+onClick={() => setCurrentQuestion(currentQuestion + 1)}
+style={{
+...yellowBtnSmall,
+flex: 1,
+margin: 0,
+padding: "14px",
+opacity: currentQuestion === cbtQuestions.length - 1 ? 0.5 : 1,
+}}
+>
+Next →
+
+<button
+onClick={() => setShowSubmitModal(true)}
+style={{
+flex: 1,
+background: "#22C55E",
+color: "white",
+border: "none",
+borderRadius: "8px",
+fontWeight: "bold",
+fontSize: "14px",
+padding: "14px",
+cursor: "pointer",
+}}
+>
+Submit
+
+
+{/* 2. SUBMIT CONFIRMATION MODAL */}
+{showSubmitModal && (
+<div
+className="modal-overlay"
+style={{
+position: "fixed",
+top: 0,
+left: 0,
+right: 0,
+bottom: 0,
+background: "rgba(0,0,0,0.6)",
+display: "flex",
+justifyContent: "center",
+alignItems: "center",
+zIndex: 9999,
+}}
+>
+<div
+className="modal-card"
+style={{
+background: "white",
+padding: "24px",
+borderRadius: "16px",
+width: "90%",
+maxWidth: "400px",
+textAlign: "center",
+color: "#0B2C4A",
+}}
+>
+<h2 style={{ marginTop: 0 }}>Submit Exam?
+Are you sure you want to submit your CBT?
+{/* Warning Banner */}
+0 ? "#FFF3CD" : "#D4EDDA",
+color: unansweredCount > 0 ? "#856404" : "#155724",
+padding: "10px",
+borderRadius: "8px",
+fontWeight: "bold",
+fontSize: "13px",
+}}
+>
+{unansweredCount > 0
+? ⚠️ You still have ${unansweredCount} unanswered questions.
+: "✅ All questions answered."}
+
+<div style={{ margin: "14px 0", fontSize: "15px" }}>
+<p style={{ margin: "6px 0" }}>
+✅ Answered: {answeredCount}
+
+<p style={{ margin: "6px 0" }}>
+❓ Unanswered: {unansweredCount}
+
+
+{unansweredCount > 0 && (
+<button
+onClick={reviewUnanswered}
+style={{
+...yellowBtn,
+marginBottom: "10px",
+padding: "12px",
+}}
+>
+Review Unanswered
+
+)}
+<div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+<button
+onClick={() => setShowSubmitModal(false)}
+style={{
+...darkBlueBtn,
+flex: 1,
+margin: 0,
+padding: "12px",
+}}
+>
+Continue Exam
+
+<button
+onClick={() => {
+setShowSubmitModal(false);
+submitExam();
+}}
+style={{
+flex: 1,
+background: "#22C55E",
+color: "white",
+border: "none",
+borderRadius: "8px",
+fontWeight: "bold",
+padding: "12px",
+cursor: "pointer",
+}}
+>
+Submit Now
+
+
+
+
+)}
+
+
+);
+}
+// =========================================================
+// VIEW: JAMB CBT RESULT & SUBJECT SCORE ANALYSIS
+// =========================================================
+if (view === "result" && cbtAnalysis) {
+const pct = parseFloat(cbtAnalysis.percentage);
+let levelLabel = "Needs Improvement";
+let levelBg = "#f8d7da";
+let levelColor = "#721c24";
+if (pct >= 90) {
+levelLabel = "Excellent";
+levelBg = "#d4edda";
+levelColor = "#155724";
+} else if (pct >= 75) {
+levelLabel = "Very Good";
+levelBg = "#d1ecf1";
+levelColor = "#0c5460";
+} else if (pct >= 60) {
+levelLabel = "Good";
+levelBg = "#fff3cd";
+levelColor = "#856404";
+} else if (pct >= 50) {
+levelLabel = "Fair";
+levelBg = "#ffeeba";
+levelColor = "#856404";
+}
+return (
+
+
+<div className="App-content" style={{ paddingBottom: "95px" }}>
+JAMB CBT RESULT
+{/* Colored Summary Performance Card */}
+<div
+style={{
+background: levelBg,
+color: levelColor,
+padding: "16px",
+borderRadius: "12px",
+marginBottom: "15px",
+border: 2px solid ${levelColor},
+}}
+>
+<h2 style={{ margin: "0 0 5px" }}>{levelLabel}
+<p style={{ margin: 0, fontWeight: "bold" }}>
+Estimated JAMB Score: {cbtAnalysis.estimatedJamb} / 400
+
+
+{/* Subject Breakdown Box */}
+<div
+style={{
+background: "white",
+padding: "16px",
+borderRadius: "12px",
+textAlign: "left",
+marginBottom: "15px",
+boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+}}
+>
+<h3 style={{ marginTop: 0, color: "#0B2C4A" }}>Subject Score Breakdown
+{cbtAnalysis.subjects.map((subj) => {
+const item = cbtAnalysis.breakdown[subj] || { correct: 0, total: 0 };
+return (
+<p
+key={subj}
+style={{
+display: "flex",
+justifyContent: "space-between",
+borderBottom: "1px solid #eee",
+paddingBottom: "6px",
+margin: "8px 0",
+fontWeight: "bold",
+}}
+>
+{subj}:
+
+{item.correct} / {item.total}
+
+
+);
+})}
+<div style={{ marginTop: "12px", paddingTop: "8px", borderTop: "2px solid #0B2C4A" }}>
+<p style={{ margin: "4px 0" }}>
+Total: {cbtAnalysis.score} / {cbtAnalysis.total}
+
+<p style={{ margin: "4px 0" }}>
+Percentage: {cbtAnalysis.percentage}%
+
+<p style={{ margin: "4px 0", color: "green" }}>
+Strongest Subject: {cbtAnalysis.strongest}
+
+<p style={{ margin: "4px 0", color: "#d9534f" }}>
+Weakest Subject: {cbtAnalysis.weakest}
+
+
+
+<button onClick={() => setView("cbt_setup")} style={yellowBtnSmall}>
+Take Another CBT
+
+<button onClick={() => setView("cbt_history")} style={darkBlueBtn}>
+My CBT History
+
+<button onClick={() => setView("home")} style={darkBlueBtn}>
+Back Home
+
+);
+}
+// =========================================================
+// VIEW: MY CBT HISTORY
+// =========================================================
+if (view === "cbt_history") {
+return (
+
+
+<div className="App-content" style={{ paddingBottom: "95px" }}>
+My CBT History
+Previous 180-Question JAMB CBT Attempts
+{cbtHistory.length === 0 && (
+No CBT attempts recorded yet. Start a JAMB CBT exam to track your progress!
+)}
+{cbtHistory.map((item) => (
+<div
+key={item.id}
+className="leader-card"
+style={{ textAlign: "left", padding: "14px", marginBottom: "10px" }}
+>
+<div style={{ display: "flex", justifyContent: "space-between" }}>
+Est. JAMB: {item.estimatedJamb}/400
+<span style={{ fontSize: "12px", color: "#666" }}>{item.date}
+
+<p style={{ margin: "6px 0", fontSize: "13px" }}>
+Subjects: {item.subjects.join(", ")}
+
+<p style={{ margin: 0, fontSize: "13px" }}>
+Score: {item.score}/{item.total} ({item.percentage}%)
+
+
+))}
+<button onClick={() => setView("cbt_setup")} style={yellowBtnSmall}>
+New JAMB CBT
+
+<button onClick={() => setView("home")} style={darkBlueBtn}>
+Go Home
+
+
+
+
+);
+}
+// =========================================================
+// EXISTING PRACTICE, COMMUNITY, GAMES & HOME VIEWS
+// =========================================================
+if (view === "quiz") {
+if (showResult) {
+return (
+
+
+Your Result
+
+{score} / {quizQuestions.length}
+
+
+{subject} - {mode === "aitest" ? "AI Test" : "Practice"}
+
+
+{score >= quizQuestions.length * 0.7
+? "Excellent. You are ready for JAMB."
+: score >= quizQuestions.length * 0.5
+? "Good work. Keep practicing."
+: "Do not give up. Practice more and you will improve."}
+
+<button onClick={() => setView("subjects")} style={yellowBtnSmall}>
+Try Another Subject
+
+<button onClick={() => setView("home")} style={darkBlueBtn}>
+Go Home
+
+
+
+
+);
+}
+const q = quizQuestions[currentQ];
+const qText = q.question || q.q;
+return (
+
+
+
+{subject} - {mode === "aitest" ? "AI Test" : "Practice"}
+
+
+Question {currentQ + 1} of {quizQuestions.length} | Score: {score}
+
+
+{qText}
+{q.options.map((opt, idx) => (
+<button
+key={idx}
+onClick={() => answerQuestion(idx)}
+style={optionStyle(
+selected !== null && isOptionCorrect(q, idx),
+selected === idx && !isOptionCorrect(q, idx)
+)}
+>
+{opt}
+
+))}
+
+{selected !== null && (
+
+{currentQ + 1 === quizQuestions.length ? "Finish" : "Next Question"}
+
+)}
+
+
+
+);
+}
+if (view === "comments") {
+return (
+
+
+<div className="App-content" style={{ paddingBottom: "90px" }}>
+What Students Are Saying
+<input placeholder="Your Full Name, for example Musa Bello" value={commentName} onChange={(e) => setCommentName(e.target.value)} className="input-box" />
+<input placeholder="Your Email Address, for example musa@gmail.com" value={commentEmail} onChange={(e) => setCommentEmail(e.target.value)} className="input-box" type="email" />
+<textarea placeholder="Write your comment here." value={commentText} onChange={(e) => setCommentText(e.target.value)} className="textarea-box" />
+Post Comment
+
+{comments.map((c) => (
+
+{c.name}
+{c.email}
+{c.text}
+
+<button onClick={() => likeComment(c.id)} style={{ background: c.liked ? "#FFC107" : "white", color: "#0B2C4A", border: "1px solid #FFC107", padding: "6px 10px", borderRadius: "8px", fontWeight: "bold", fontSize: "12px", cursor: "pointer" }}>
+{c.liked ? "❤️" : "🤍"} {c.likes} Like
+
+<button onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)} style={darkBlueBtn}>
+💬 Reply ({c.replies.length})
+
+
+{replyingTo === c.id && (
+
+<input placeholder="Your Name, for example Eleazar - Founder" value={replyName} onChange={(e) => setReplyName(e.target.value)} className="input-box" />
+<textarea placeholder="Write your reply." value={replyText} onChange={(e) => setReplyText(e.target.value)} className="textarea-box" />
+<button onClick={() => addReply(c.id)} style={yellowBtnSmall}>Send Reply
 <button onClick={() => setReplyingTo(null)} style={darkBlueBtn}>Cancel
 
 )}
