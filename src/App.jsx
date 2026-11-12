@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
-import { QUESTIONS, ALL_SUBJECTS } from "./data/questionBank";
+import { QUESTIONS, ALL_SUBJECTS } from "./data/questionbank";
 
 function shuffleArray(arr) {
   const copy = [...arr];
